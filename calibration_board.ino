@@ -1,53 +1,38 @@
-#include <LowPower.h>
-#include <InterboardSerial.h>
 #include <SerialTransfer.h>
-#include <jled.h>
 
-#include "src/Thermistor.h"
+#include "src/AnalogReader.h"
+#include "src/LED.h"
+#include "src/Transmitter.h"
 
 constexpr uint16_t TRANSMISSION_PERIOD_MS = 1000;
 
-constexpr uint8_t TRANSMIT_LED_PIN = 10;
-constexpr uint8_t POWER_LED_PIN = 11;
+auto transmitter = Transmitter();
 
-auto transmitter = SerialTransfer();
+auto powerLed = LED(11);
+auto transmitLed = LED(10);
 
-auto firstMeter = Thermistor("Primary", A4, 7);
-auto secondMeter = Thermistor("Secondary", A5, 9);
+auto primaryThermistor = Thermistor().setSensePin(A4).setPowerPin(7);
+auto secondaryThermistor = Thermistor().setSensePin(A5).setPowerPin(9);
 
-auto transmitLed = JLed(TRANSMIT_LED_PIN).Blink(10, 1);
+auto analogReader = AnalogReader()
+  .addThermistor(primaryThermistor)
+  .addThermistor(secondaryThermistor);
 
 void setup() {
-  JLed(POWER_LED_PIN).Set(50).Update();
-
-  firstMeter.begin();
-  secondMeter.begin();
-
-  Serial1.begin(SERIAL_BAUD_RATE);
-  transmitter.begin(Serial1);
+  powerLed.on();
+  transmitter.begin();
+  analogReader.begin();
 }
 
-static uint32_t lastTransmissionTimestampMs = 0;
-
 void loop() {
-  transmitLed.Update();
-
-  if (millis() - lastTransmissionTimestampMs < TRANSMISSION_PERIOD_MS) return; 
+  analogReader.takeMeasurements();
 
   DTO dto;
-  dto.primaryThermistorTemperatureFahrenheit = firstMeter.temperatureFahrenheit();
-  dto.secondaryThermistorTemperatureFahrenheit = secondMeter.temperatureFahrenheit();
+  dto.primaryThermistorTemperatureFahrenheit = primaryThermistor.temperatureFahrenheit();
+  dto.secondaryThermistorTemperatureFahrenheit = secondaryThermistor.temperatureFahrenheit();
   
-  transmitter.sendDatum(dto);
-  Serial1.flush();
-  lastTransmissionTimestampMs = millis();
-  
-  transmitLed.Reset();
+  transmitter.send(dto);
+  transmitLed.blink();
 
-  LowPower.idle(
-    SLEEP_1S, 
-    ADC_OFF, 
-    TIMER4_OFF, TIMER3_OFF, TIMER1_OFF, 
-    TIMER0_ON, // left ON to drive PWM of LEDs
-    SPI_OFF, USART1_OFF, TWI_OFF, USB_OFF);
+  delay(TRANSMISSION_PERIOD_MS);
 }

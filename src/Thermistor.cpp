@@ -4,42 +4,45 @@
 
 #include <Arduino.h>
 
-void Thermistor::begin() {
+constexpr uint8_t VOLTAGE_STABLE_DELAY_MS = 10;
+
+// from Sensor Temperature Resistance Curves Reference Guide
+// for SC30F103VN thermistor
+constexpr double A_COEFFICIENT = 3.3540154E-03;
+constexpr double B_COEFFICIENT = 2.5627725E-04;
+constexpr double C_COEFFICIENT = 2.0829210E-06;
+constexpr double D_COEFFICIENT = 7.3003206E-08;
+
+void Thermistor::prepareForMeasurement() {
   pinMode(powerPin, OUTPUT);
-  digitalWrite(powerPin, LOW);
+  digitalWrite(powerPin, HIGH);
+  isPowerPinHigh = true;
+  preparingForMeasurementStartTimestamp = millis();
 }
 
-double Thermistor::temperatureFahrenheit() {
-  digitalWrite(powerPin, HIGH);
-  delay(VOLTAGE_STABLE_DELAY_MS);
-  
+bool Thermistor::isReadyForMeasurement() {
+  if (!isPowerPinHigh) return false;
+  return millis() - preparingForMeasurementStartTimestamp >= VOLTAGE_STABLE_DELAY_MS;
+}
+
+void Thermistor::takeMeasurement(uint8_t adcResolutionBits) {
   analogRead(sensePin); // flush ADC
 
-  double sum = 0.0;
-  for (uint8_t i = 0; i < SAMPLE_COUNT; i++) {
-    delay(SAMPLE_PERIOD_MS);
-    sum += readAbsoluteTemperature();
-  }
-
+  double temperature = readAbsoluteTemperature(adcResolutionBits);
   digitalWrite(powerPin, LOW);
 
-  double averageTemperature = sum / SAMPLE_COUNT;
-  double temperatureFahrenheit = (averageTemperature - 273.15) * 9.0 / 5.0 + 32.0;
-  
-  Serial.print("Thermistor \"");
-  Serial.print(name); 
-  Serial.print("\": ");
-  Serial.print(temperatureFahrenheit);
-  Serial.println('F');
-  
-  return temperatureFahrenheit;
+  double temperatureFahrenheit = (temperature - 273.15) * 9.0 / 5.0 + 32.0;
+  lastTakenTemperatureFahrenheit = temperatureFahrenheit;
+
+  Serial.println(temperatureFahrenheit);
 }
 
 // from Sensor Temperature Resistance Curves Reference Guide
 // for SC30F103VN thermistor 
-double Thermistor::readAbsoluteTemperature() {
-  static double adcDivisionCount = 1u << ADC_BITS;
-  double rtToR25 = 1.0 / ((adcDivisionCount / analogRead(sensePin)) - 1.0);
+double Thermistor::readAbsoluteTemperature(uint8_t adcResolutionBits) {
+  double adcDivisionCount = 1u << adcResolutionBits;
+  double adcReading = analogRead(sensePin);
+  double rtToR25 = 1.0 / ((adcDivisionCount / adcReading) - 1.0);
   double lnRtToR25 = log(rtToR25);
   return 1.0 / (
     A_COEFFICIENT +
