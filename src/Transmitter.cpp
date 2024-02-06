@@ -3,7 +3,6 @@
 #include <Arduino.h>
 
 #include <SerialTransfer.h>
-
 #include <InterboardSerial.h>
 
 void Transmitter::begin() {

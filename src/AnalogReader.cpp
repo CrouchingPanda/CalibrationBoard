@@ -1,5 +1,8 @@
 #include "AnalogReader.h"
 
+#include <stdint.h>
+#include <stdlib.h>
+
 #include <Arduino.h>
 
 constexpr eAnalogReference REFERENCE_VOLTAGE = AR_VDD4; // VDD
@@ -19,15 +22,15 @@ void AnalogReader::takeMeasurements() {
 
   analogCalibrateOffset();
 
-  for (uint8_t i = 0; i <= lastAddedThermistorIndex; i++) {
+  for (size_t i = 0; i <= lastAddedThermistorIndex; i++) {
     thermistors[i]->prepareForMeasurement();
   }
 
-  for (uint8_t i = 0; i <= lastAddedThermistorIndex; i++) {
+  for (size_t i = 0; i <= lastAddedThermistorIndex; i++) {
     while (!thermistors[i]->isReadyForMeasurement());
   }
 
-  for (uint8_t i = 0; i <= lastAddedThermistorIndex; i++) {
+  for (size_t i = 0; i <= lastAddedThermistorIndex; i++) {
     thermistors[i]->takeMeasurement(RESOLUTION_BITS);
   }
 }

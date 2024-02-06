@@ -1,6 +1,8 @@
 #ifndef THERMISTOR_H
 #define THERMISTOR_H
 
+#include <stdint.h>
+
 #include <Arduino.h>
 
 class Thermistor {

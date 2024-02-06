@@ -1,6 +1,8 @@
 #ifndef LED_H
 #define LED_H
 
+#include <stdint.h>
+
 #include <Arduino.h>
 
 #include <jled.h>

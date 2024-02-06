@@ -1,6 +1,8 @@
 #ifndef ANALOG_READER_H
 #define ANALOG_READER_H
 
+#include <stdint.h>
+
 #include <Arduino.h>
 
 #include "Thermistor.h"

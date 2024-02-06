@@ -1,5 +1,7 @@
 #include "LED.h"
 
+#include <stdint.h>
+
 #include <Arduino.h>
 
 #include <jled.h>
