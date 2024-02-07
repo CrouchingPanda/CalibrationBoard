@@ -11,7 +11,7 @@ class Thermistor {
 
   uint32_t preparingForMeasurementStartTimestamp = 0;
 
-  double lastTakenTemperatureFahrenheit;
+  double lastTakenTemperatureFahrenheit = 0.0;
 
   public:
 
