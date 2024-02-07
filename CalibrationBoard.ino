@@ -1,5 +1,3 @@
-#include <SerialTransfer.h>
-
 #include "src/AnalogReader.h"
 #include "src/LED.h"
 #include "src/Transmitter.h"
