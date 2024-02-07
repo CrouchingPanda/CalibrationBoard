@@ -20,15 +20,17 @@ void Thermistor::prepareForMeasurement() {
   preparingForMeasurementStartTimestamp = millis();
 }
 
+// we need to wait until the voltage on thermistor becomes stable
 bool Thermistor::isReadyForMeasurement() {
   if (!isPowerPinHigh) return false;
   return millis() - preparingForMeasurementStartTimestamp >= VOLTAGE_STABLE_DELAY_MS;
 }
 
 void Thermistor::takeMeasurement(uint8_t adcResolutionBits) {
-  analogRead(sensePin); // flush ADC
+  analogRead(sensePin); // flush "stale" voltage out of ADC hardware
 
   double temperature = readAbsoluteTemperature(adcResolutionBits);
+  
   digitalWrite(powerPin, LOW);
 
   double temperatureFahrenheit = (temperature - 273.15) * 9.0 / 5.0 + 32.0;
@@ -36,7 +38,7 @@ void Thermistor::takeMeasurement(uint8_t adcResolutionBits) {
 }
 
 // from Sensor Temperature Resistance Curves Reference Guide
-// for SC30F103VN thermistor 
+// for SC30F103VN thermistor; also see hardware layout
 double Thermistor::readAbsoluteTemperature(uint8_t adcResolutionBits) {
   double adcDivisionCount = 1u << adcResolutionBits;
   double adcReading = analogRead(sensePin);
