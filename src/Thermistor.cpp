@@ -38,7 +38,7 @@ void Thermistor::takeMeasurement(uint8_t adcResolutionBits) {
 }
 
 // from Sensor Temperature Resistance Curves Reference Guide
-// for SC30F103VN thermistor; also see hardware layout
+// for SC30F103VN thermistor; also see hardware layout as well as README
 double Thermistor::readAbsoluteTemperature(uint8_t adcResolutionBits) {
   double adcDivisionCount = 1u << adcResolutionBits;
   double adcReading = analogRead(sensePin);
